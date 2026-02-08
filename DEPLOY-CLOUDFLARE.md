@@ -10,6 +10,7 @@
    - **Build command**: `npm run build`
    - **Build output directory**: `dist`
    - **Root directory**: 留空或 `/`
+   - **Deploy command**：**留空**（不要填 `npx wrangler deploy`）。留空后 Pages 会自动部署构建产物并启用 `functions/` 下的接口；若自定义了 deploy command，会报错且 `/api` 不可用。
 4. 在 **Settings** → **Environment variables** 中为「Production」添加：
    - `DASHSCOPE_API_KEY`：百炼 API 密钥（必填）
    - `BAZI_APP_ID`：八字排盘 Agent ID（流年运势需要时填）
@@ -43,7 +44,11 @@ wrangler pages deploy dist --project-name=春联生成器
 
 前端无需改代码，请求 `/api/...` 会由同一站点下的 Functions 处理。
 
-## 四、目录说明
+## 四、若已设置「Deploy command: npx wrangler deploy」
+
+项目内已包含 `wrangler.jsonc`（仅上传 `dist` 静态资源），下次构建时 `npx wrangler deploy` 会通过。但这样部署后 **不会** 启用 `functions/`，即 **/api 接口不可用**。若需要 AI 生成等接口，请按「一」将 **Deploy command 清空**，用 Pages 默认流程部署。
+
+## 五、目录说明
 
 - **Vercel**：使用根目录下 `api/*.js`（`req/res` 风格）。
 - **Cloudflare**：使用 `functions/api/*.js`（Fetch 风格，`context.request` / `context.env`）。两套实现逻辑一致，可按部署目标选用。
