@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
-import html2canvas from 'html2canvas'
+import html2canvas from 'html2canvas-pro'
 import ConfigPanel, {
   type AiMode,
   type BorderPattern,
@@ -73,6 +73,7 @@ function App() {
     wish: [],
   })
   const [isAiLoading, setIsAiLoading] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
   const previewRef = useRef<HTMLElement>(null)
 
   const handlePersonalInfoChange = (info: Partial<PersonalInfo>) => {
@@ -125,20 +126,41 @@ function App() {
 
   const handleExportPrintPackage = useCallback(async () => {
     const el = previewRef.current
-    if (!el) return
+    if (!el) {
+      alert('无法获取预览区域，请刷新页面后重试。')
+      return
+    }
+    setIsExporting(true)
     try {
+      await document.fonts.ready
       const canvas = await html2canvas(el, {
         scale: 2,
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#f8f3ec',
+        logging: false,
       })
-      const link = document.createElement('a')
-      link.download = `吉语生联-打印包-${Date.now()}.png`
-      link.href = canvas.toDataURL('image/png')
-      link.click()
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            alert('生成图片失败，请重试。')
+            return
+          }
+          const url = URL.createObjectURL(blob)
+          const link = document.createElement('a')
+          link.download = `吉语生联-打印包-${Date.now()}.png`
+          link.href = url
+          link.click()
+          URL.revokeObjectURL(url)
+        },
+        'image/png',
+        0.95,
+      )
     } catch (err) {
       console.error('Export failed:', err)
+      alert('导出失败：' + (err instanceof Error ? err.message : '未知错误'))
+    } finally {
+      setIsExporting(false)
     }
   }, [])
 
@@ -182,7 +204,11 @@ function App() {
             onPersonalInfoChange={handlePersonalInfoChange}
             onAiInspire={handleAiInspire}
           />
-          <PrimaryButton label="生成打印包" onClick={handleExportPrintPackage} />
+          <PrimaryButton
+            label={isExporting ? '导出中...' : '生成打印包'}
+            onClick={handleExportPrintPackage}
+            disabled={isExporting}
+          />
         </div>
         <PreviewCanvas
           ref={previewRef}
