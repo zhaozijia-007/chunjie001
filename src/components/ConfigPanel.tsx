@@ -121,6 +121,100 @@ function ConfigPanel({
   onPersonalInfoChange,
   onAiInspire,
 }: ConfigPanelProps) {
+  const StyleSection = () => (
+    <div>
+      <p className="mb-2 text-sm font-semibold text-ink-ink">款式</p>
+      <div className="space-y-3">
+        <div>
+          <p className="mb-1.5 text-xs text-ink-ink/70">SKU</p>
+          <div className="flex gap-1 rounded-full bg-ink-red-500/10 p-1">
+            {skuOptions.map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => onSkuChange(opt.id)}
+                className={`flex-1 rounded-full px-2 py-1.5 text-xs font-medium transition ${
+                  opt.id === sku ? 'bg-ink-red-600 text-white' : 'text-ink-ink/70 hover:text-ink-ink'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <p className="mb-1.5 text-xs text-ink-ink/70">字体颜色</p>
+          <div className="flex gap-1.5">
+            {inkColorOptions.map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => onInkColorChange(opt.id)}
+                className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                  opt.id === inkColor
+                    ? 'border-ink-gold-500 bg-ink-red-600 text-white'
+                    : 'border-ink-red-500/20 text-ink-ink/70 hover:text-ink-ink'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <p className="mb-1.5 text-xs text-ink-ink/70">纸张</p>
+          <div className="flex flex-wrap gap-1.5">
+            {paperOptions.map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => onPaperStyleChange(opt.id)}
+                className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                  opt.id === paperStyle
+                    ? 'border-ink-gold-500 bg-ink-red-600 text-white'
+                    : 'border-ink-red-500/20 text-ink-ink/70 hover:text-ink-ink'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <p className="mb-1.5 text-xs text-ink-ink/70">镶边</p>
+          <div className="flex flex-wrap gap-1.5">
+            {borderPatternOptions.map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => onBorderPatternChange(opt.id)}
+                className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                  opt.id === borderPattern
+                    ? 'border-ink-gold-500 bg-ink-red-600 text-white'
+                    : 'border-ink-red-500/20 text-ink-ink/70 hover:text-ink-ink'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <p className="mb-1.5 text-xs text-ink-ink/70">字体</p>
+          <select
+            value={fontFamily}
+            onChange={(e) => onFontChange(e.target.value)}
+            className="w-full rounded-lg border border-ink-red-500/20 bg-white px-3 py-2 text-sm focus:border-ink-red-500 focus:outline-none"
+          >
+            {fontOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+    </div>
+  )
+
   return (
     <section className="rounded-3xl border border-white/40 bg-white/70 p-5 shadow-[0_20px_40px_rgba(0,0,0,0.08)] backdrop-blur paper-texture">
       <div className="mb-4">
@@ -243,6 +337,7 @@ function ConfigPanel({
               <p className="text-xs leading-relaxed text-ink-ink/70">{generationReasoning}</p>
             </div>
           )}
+          <StyleSection />
         </div>
       )}
 
@@ -266,6 +361,7 @@ function ConfigPanel({
             {isAiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
             {isAiLoading ? 'AI 生成中...' : 'AI 根据关键词生成春联'}
           </button>
+          <StyleSection />
         </div>
       )}
 
@@ -309,97 +405,7 @@ function ConfigPanel({
               />
             </div>
           </div>
-          <div>
-            <p className="mb-2 text-sm font-semibold text-ink-ink">款式</p>
-            <div className="space-y-3">
-              <div>
-                <p className="mb-1.5 text-xs text-ink-ink/70">SKU</p>
-                <div className="flex gap-1 rounded-full bg-ink-red-500/10 p-1">
-                  {skuOptions.map((opt) => (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() => onSkuChange(opt.id)}
-                      className={`flex-1 rounded-full px-2 py-1.5 text-xs font-medium transition ${
-                        opt.id === sku ? 'bg-ink-red-600 text-white' : 'text-ink-ink/70 hover:text-ink-ink'
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <p className="mb-1.5 text-xs text-ink-ink/70">字体颜色</p>
-                <div className="flex gap-1.5">
-                  {inkColorOptions.map((opt) => (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() => onInkColorChange(opt.id)}
-                      className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
-                        opt.id === inkColor
-                          ? 'border-ink-gold-500 bg-ink-red-600 text-white'
-                          : 'border-ink-red-500/20 text-ink-ink/70 hover:text-ink-ink'
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <p className="mb-1.5 text-xs text-ink-ink/70">纸张</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {paperOptions.map((opt) => (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() => onPaperStyleChange(opt.id)}
-                      className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
-                        opt.id === paperStyle
-                          ? 'border-ink-gold-500 bg-ink-red-600 text-white'
-                          : 'border-ink-red-500/20 text-ink-ink/70 hover:text-ink-ink'
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <p className="mb-1.5 text-xs text-ink-ink/70">镶边</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {borderPatternOptions.map((opt) => (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() => onBorderPatternChange(opt.id)}
-                      className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
-                        opt.id === borderPattern
-                          ? 'border-ink-gold-500 bg-ink-red-600 text-white'
-                          : 'border-ink-red-500/20 text-ink-ink/70 hover:text-ink-ink'
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <p className="mb-1.5 text-xs text-ink-ink/70">字体</p>
-                <select
-                  value={fontFamily}
-                  onChange={(e) => onFontChange(e.target.value)}
-                  className="w-full rounded-lg border border-ink-red-500/20 bg-white px-3 py-2 text-sm focus:border-ink-red-500 focus:outline-none"
-                >
-                  {fontOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
+          <StyleSection />
         </div>
       )}
     </section>
