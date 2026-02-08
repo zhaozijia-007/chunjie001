@@ -8,6 +8,8 @@ type PreviewCanvasProps = {
   inkColor: InkColor
   borderPattern: BorderPattern
   fontFamily: string
+  isPetMode?: boolean
+  petType?: string
 }
 
 type PaperStyleValue = CSSProperties & {
@@ -46,8 +48,70 @@ const borderPatternStyles: Record<BorderPattern, string> = {
   wanzi: 'border-wanzi',
 }
 
+const PetIcon = ({ petType, className }: { petType: string; className?: string }) => {
+  const svgClass = `fill-none stroke-2 stroke-[#1a1a1a] ${className ?? ''}`
+  switch (petType) {
+    case '猫':
+      return (
+        <svg viewBox="0 0 64 64" className={svgClass} fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <ellipse cx="32" cy="38" rx="14" ry="16" />
+          <circle cx="28" cy="34" r="2" fill="#1a1a1a" stroke="none" />
+          <circle cx="36" cy="34" r="2" fill="#1a1a1a" stroke="none" />
+          <path d="M32 42c2 2 4 4 6 2M32 42c-2 2-4 4-6 2" />
+          <path d="M22 28c-2-4 0-10 4-12M42 28c2-4 0-10-4-12" />
+          <path d="M20 20c2 0 4-2 4-4M44 20c-2 0-4-2-4-4" />
+          <ellipse cx="32" cy="50" rx="4" ry="2" />
+        </svg>
+      )
+    case '狗':
+      return (
+        <svg viewBox="0 0 64 64" className={svgClass} fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <ellipse cx="32" cy="36" rx="12" ry="14" />
+          <ellipse cx="32" cy="20" rx="8" ry="10" />
+          <circle cx="28" cy="18" r="2" fill="#1a1a1a" stroke="none" />
+          <circle cx="36" cy="18" r="2" fill="#1a1a1a" stroke="none" />
+          <path d="M26 26c0-2 2-4 4-2M38 26c0-2-2-4-4-2" />
+          <path d="M20 36c-2 4 0 8 4 10M44 36c2 4 0 8-4 10" />
+          <path d="M28 48c0 4 4 4 8 0M36 48c0 4-4 4-8 0" />
+        </svg>
+      )
+    case '乌龟':
+      return (
+        <svg viewBox="0 0 64 64" className={svgClass} fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <ellipse cx="32" cy="38" rx="16" ry="12" />
+          <ellipse cx="32" cy="26" rx="8" ry="10" />
+          <circle cx="28" cy="24" r="2" fill="#1a1a1a" stroke="none" />
+          <circle cx="36" cy="24" r="2" fill="#1a1a1a" stroke="none" />
+          <path d="M24 38c-4 0-6 4-4 8M40 38c4 0 6 4 4 8" />
+          <path d="M20 42c0 4 4 6 12 6s12-2 12-6" />
+        </svg>
+      )
+    case '仓鼠':
+      return (
+        <svg viewBox="0 0 64 64" className={svgClass} fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="32" cy="34" r="14" />
+          <circle cx="28" cy="32" r="2" fill="#1a1a1a" stroke="none" />
+          <circle cx="36" cy="32" r="2" fill="#1a1a1a" stroke="none" />
+          <path d="M24 34c-2-2-4-6 0-8M40 34c2-2 4-6 0-8" />
+          <path d="M22 42c0 4 10 6 20 6s20-2 20-6" />
+          <ellipse cx="32" cy="24" rx="4" ry="3" />
+        </svg>
+      )
+    default:
+      return (
+        <svg viewBox="0 0 64 64" className={svgClass} fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <ellipse cx="32" cy="38" rx="14" ry="16" />
+          <circle cx="28" cy="34" r="2" fill="#1a1a1a" stroke="none" />
+          <circle cx="36" cy="34" r="2" fill="#1a1a1a" stroke="none" />
+          <path d="M32 42c2 2 4 4 6 2M32 42c-2 2-4 4-6 2" />
+          <path d="M22 28c-2-4 0-10 4-12M42 28c2-4 0-10-4-12" />
+        </svg>
+      )
+  }
+}
+
 const PreviewCanvas = forwardRef<HTMLElement, PreviewCanvasProps>(function PreviewCanvas(
-  { content, paperStyle, inkColor, borderPattern, fontFamily },
+  { content, paperStyle, inkColor, borderPattern, fontFamily, isPetMode, petType },
   ref
 ) {
   const paperStyleValue = paperStyleMap[paperStyle]
@@ -69,47 +133,96 @@ const PreviewCanvas = forwardRef<HTMLElement, PreviewCanvasProps>(function Previ
     </svg>
   )
 
+  const textClass = inkColor === 'gold' && !isPetMode ? 'couplet-text' : ''
+  const textStyle = inkColor === 'black' && !isPetMode ? { color: textColor } : {}
+  const petTextClass = isPetMode ? 'style-pet-text' : ''
+  const wrapperClass = isPetMode ? 'style-pet' : ''
+
+  const TextWithEn = ({
+    text,
+    en,
+    className,
+    style,
+  }: { text: string; en?: string; className: string; style?: React.CSSProperties }) => (
+    <span className="inline-flex flex-col items-center">
+      <span className={className} style={style}>{text}</span>
+      {isPetMode && en && <span className="english-tag">{en}</span>}
+    </span>
+  )
+
   return (
     <section
       ref={ref}
-      className="relative flex min-h-[480px] flex-1 items-center justify-center rounded-3xl border border-white/60 bg-white/70 p-4 shadow-[0_30px_60px_rgba(0,0,0,0.1)] wall-texture sm:min-h-[560px] sm:p-6 lg:min-h-[620px] lg:p-8"
+      className="preview-container relative flex min-h-[480px] flex-1 items-center justify-center rounded-3xl border border-white/60 p-4 shadow-[0_30px_60px_rgba(0,0,0,0.1)] sm:min-h-[560px] sm:p-6 lg:min-h-[620px] lg:p-8"
     >
       <HorseMascot />
-      <div className="flex h-full w-full items-center justify-center overflow-auto">
+      <div className={`flex h-full w-full items-center justify-center overflow-auto ${wrapperClass}`}>
         <div className="relative grid w-full max-w-4xl grid-cols-[1fr_auto_1fr] gap-6 px-2 py-6 sm:gap-8 sm:px-4 sm:py-10 lg:gap-12 lg:px-6 lg:py-12">
           <div className="col-span-3 flex justify-center">
             <div
-              style={{ ...paperStyleValue, fontFamily, color: textColor }}
-              className={`paper-texture rounded-2xl px-10 py-4 text-xl font-semibold tracking-[0.4em] shadow-[0_12px_24px_rgba(0,0,0,0.2)] sm:px-12 sm:py-5 sm:text-2xl sm:tracking-[0.5em] lg:px-16 lg:py-6 lg:text-3xl lg:tracking-[0.6em] ${borderClass}`}
+              style={{ ...paperStyleValue, fontFamily }}
+              className={`couplet-bg rounded-2xl px-10 py-3 text-xl font-semibold tracking-[0.4em] sm:px-12 sm:py-4 sm:text-2xl sm:tracking-[0.5em] lg:px-16 lg:py-5 lg:text-3xl lg:tracking-[0.6em] ${borderClass}`}
             >
-              {content.banner}
+              <TextWithEn
+                text={content.banner}
+                en={content.bannerEn}
+                className={`${textClass} ${petTextClass}`}
+                style={textStyle}
+              />
             </div>
           </div>
 
           <div className="flex justify-end">
             <div
-              style={{ ...paperStyleValue, fontFamily, color: textColor }}
-              className={`paper-texture flex min-h-[280px] w-[100px] items-center justify-center rounded-2xl px-4 py-8 text-2xl shadow-[0_18px_30px_rgba(0,0,0,0.25)] sm:min-h-[360px] sm:w-[120px] sm:px-5 sm:py-10 sm:text-3xl lg:min-h-[420px] lg:w-[140px] lg:px-6 lg:py-12 lg:text-4xl ${borderClass}`}
+              style={{ ...paperStyleValue, fontFamily }}
+              className={`couplet-bg flex min-h-[280px] w-[100px] items-center justify-center rounded-2xl px-4 py-8 text-2xl sm:min-h-[360px] sm:w-[120px] sm:px-5 sm:py-10 sm:text-3xl lg:min-h-[420px] lg:w-[140px] lg:px-6 lg:py-12 lg:text-4xl ${borderClass}`}
             >
-              <span className="vertical-rl">{content.lower}</span>
+              <TextWithEn
+                text={content.lower}
+                en={content.lowerEn}
+                className={`vertical-rl ${textClass} ${petTextClass}`}
+                style={textStyle}
+              />
             </div>
           </div>
 
           <div className="flex items-center justify-center">
             <div
-              style={{ ...paperStyleValue, fontFamily, color: textColor }}
-              className={`paper-texture flex h-24 w-24 rotate-45 items-center justify-center rounded-3xl text-3xl shadow-[0_14px_24px_rgba(0,0,0,0.25)] sm:h-32 sm:w-32 sm:text-4xl lg:h-36 lg:w-36 lg:text-5xl ${borderClass}`}
+              style={{ ...paperStyleValue, fontFamily }}
+              className={`couplet-bg flex h-24 w-24 rotate-45 items-center justify-center rounded-3xl text-3xl sm:h-32 sm:w-32 sm:text-4xl lg:h-36 lg:w-36 lg:text-5xl ${borderClass}`}
             >
-              <span className="-rotate-45">{content.fu}</span>
+              {isPetMode ? (
+                <div className="-rotate-45 flex h-full w-full flex-col items-center justify-center gap-0.5 px-0.5">
+                  <span className={`text-sm font-bold leading-none sm:text-base lg:text-lg ${petTextClass}`} style={{ color: '#1a1a1a' }}>
+                    {content.fu}
+                  </span>
+                  <PetIcon petType={petType ?? '猫'} className="h-10 w-10 flex-shrink-0 sm:h-12 sm:w-12 lg:h-14 lg:w-14" />
+                  {content.fuEn && (
+                    <span className="english-tag !text-[9px] sm:!text-[10px] lg:!text-xs">{content.fuEn}</span>
+                  )}
+                </div>
+              ) : (
+                <TextWithEn
+                  text={content.fu}
+                  en={content.fuEn}
+                  className={`-rotate-45 ${textClass} ${petTextClass}`}
+                  style={textStyle}
+                />
+              )}
             </div>
           </div>
 
           <div className="flex justify-start">
             <div
-              style={{ ...paperStyleValue, fontFamily, color: textColor }}
-              className={`paper-texture flex min-h-[280px] w-[100px] items-center justify-center rounded-2xl px-4 py-8 text-2xl shadow-[0_18px_30px_rgba(0,0,0,0.25)] sm:min-h-[360px] sm:w-[120px] sm:px-5 sm:py-10 sm:text-3xl lg:min-h-[420px] lg:w-[140px] lg:px-6 lg:py-12 lg:text-4xl ${borderClass}`}
+              style={{ ...paperStyleValue, fontFamily }}
+              className={`couplet-bg flex min-h-[280px] w-[100px] items-center justify-center rounded-2xl px-4 py-8 text-2xl sm:min-h-[360px] sm:w-[120px] sm:px-5 sm:py-10 sm:text-3xl lg:min-h-[420px] lg:w-[140px] lg:px-6 lg:py-12 lg:text-4xl ${borderClass}`}
             >
-              <span className="vertical-rl">{content.upper}</span>
+              <TextWithEn
+                text={content.upper}
+                en={content.upperEn}
+                className={`vertical-rl ${textClass} ${petTextClass}`}
+                style={textStyle}
+              />
             </div>
           </div>
         </div>

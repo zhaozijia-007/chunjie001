@@ -21,6 +21,53 @@ const defaultContent: CoupletContent = {
   fu: '福',
 }
 
+const mockPetCouplets: Record<string, CoupletContent> = {
+  猫: {
+    upper: '赚钱养猫',
+    upperEn: 'Meow Money',
+    lower: '猫肥家润',
+    lowerEn: 'Fat & Happy',
+    banner: '招财进宝',
+    bannerEn: 'Rich',
+    fu: '福',
+    fuEn: 'Luck',
+  },
+  狗: {
+    upper: '旺财旺福',
+    upperEn: 'Woof Woof',
+    lower: '狗壮家兴',
+    lowerEn: 'Buff & Happy',
+    banner: '犬吠迎春',
+    bannerEn: 'Rich',
+    fu: '旺',
+    fuEn: 'Luck',
+  },
+  乌龟: {
+    upper: '龟寿延年',
+    upperEn: 'Slow & Steady',
+    lower: '稳如泰山',
+    lowerEn: 'Rock Solid',
+    banner: '长命百岁',
+    bannerEn: 'Long Life',
+    fu: '寿',
+    fuEn: 'Luck',
+  },
+  仓鼠: {
+    upper: '囤粮过冬',
+    upperEn: 'Hoarding',
+    lower: '鼠来运转',
+    lowerEn: 'Lucky Hamster',
+    banner: '五谷丰登',
+    bannerEn: 'Rich',
+    fu: '福',
+    fuEn: 'Luck',
+  },
+}
+
+function getMockPetCouplet(petType: string): CoupletContent {
+  return mockPetCouplets[petType] ?? mockPetCouplets['猫']
+}
+
 const mockCouplets: CoupletContent[] = [
   { upper: '风和日丽山河秀', lower: '岁稔年丰社稷安', banner: '国泰民安', fu: '福' },
   { upper: '瑞雪纷飞迎盛世', lower: '红梅傲立报新春', banner: '喜迎春', fu: '春' },
@@ -50,6 +97,8 @@ function App() {
   )
   const [activeTab, setActiveTab] = useState<TabId>('fortune')
   const [aiKeyword, setAiKeyword] = useState('')
+  const [petType, setPetType] = useState('猫')
+  const [petWish, setPetWish] = useState('暴富')
   const [personalInfo, setPersonalInfo] = useState<PersonalInfo>({
     year: '1990',
     month: '1',
@@ -73,7 +122,12 @@ function App() {
     setIsAiLoading(true)
     if (activeTab === 'fortune') setGenerationReasoning(null)
     try {
-      const url = activeTab === 'fortune' ? '/api/generate-personalized-couplet' : '/api/generate-couplet'
+      const url =
+        activeTab === 'fortune'
+          ? '/api/generate-personalized-couplet'
+          : activeTab === 'pet'
+            ? '/api/generate-pet-couplet'
+            : '/api/generate-couplet'
       const body =
         activeTab === 'fortune'
           ? {
@@ -87,7 +141,9 @@ function App() {
               birthPlace: personalInfo.birthPlace,
               wish: personalInfo.wish.length ? personalInfo.wish : undefined,
             }
-          : { keywords: aiKeyword || '新春吉祥' }
+          : activeTab === 'pet'
+            ? { petType, wish: petWish || '暴富' }
+            : { keywords: aiKeyword || '新春吉祥' }
 
       const res = await fetch(url, {
         method: 'POST',
@@ -101,6 +157,10 @@ function App() {
           lower: data.lower,
           banner: data.banner,
           fu: data.fu || '福',
+          bannerEn: data.bannerEn,
+          upperEn: data.upperEn,
+          lowerEn: data.lowerEn,
+          fuEn: data.fuEn,
         })
         const reasoning =
           activeTab === 'fortune'
@@ -113,7 +173,10 @@ function App() {
         throw new Error(msg)
       }
     } catch {
-      const next = mockCouplets[Math.floor(Math.random() * mockCouplets.length)]
+      const next =
+        activeTab === 'pet'
+          ? getMockPetCouplet(petType)
+          : mockCouplets[Math.floor(Math.random() * mockCouplets.length)]
       setContent(next)
       if (activeTab === 'fortune') {
         const { year, month, day, hour, gender, birthPlace, wish } = personalInfo
@@ -134,6 +197,8 @@ function App() {
           `参考您的生辰信息及 2026 马年流年运势，三合六合贵人逢时，融入「${wishText}」愿望，推荐此联以图吉祥。`,
         ]
         setGenerationReasoning(fallbackReasonings[Math.floor(Math.random() * fallbackReasonings.length)])
+      } else if (activeTab === 'pet') {
+        setGenerationReasoning(null)
       } else {
         setGenerationReasoning(null)
       }
@@ -250,6 +315,10 @@ function App() {
             onBorderPatternChange={setBorderPattern}
             onFontChange={setFontFamily}
             onAiKeywordChange={setAiKeyword}
+            petType={petType}
+            petWish={petWish}
+            onPetTypeChange={setPetType}
+            onPetWishChange={setPetWish}
             onPersonalInfoChange={handlePersonalInfoChange}
             onAiInspire={handleAiInspire}
           />
@@ -266,6 +335,8 @@ function App() {
           inkColor={inkColor}
           borderPattern={borderPattern}
           fontFamily={fontFamily}
+          isPetMode={activeTab === 'pet'}
+          petType={petType}
         />
       </div>
     </div>

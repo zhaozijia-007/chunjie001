@@ -11,6 +11,11 @@ export type CoupletContent = {
   lower: string
   banner: string
   fu: string
+  /** Pet mode only: English tags */
+  bannerEn?: string
+  upperEn?: string
+  lowerEn?: string
+  fuEn?: string
 }
 
 export type SkuOption = {
@@ -20,7 +25,7 @@ export type SkuOption = {
 
 export type AiMode = 'keyword' | 'personal'
 
-export type TabId = 'fortune' | 'keyword' | 'custom'
+export type TabId = 'fortune' | 'keyword' | 'pet' | 'custom'
 
 export type WishId = 'career' | 'wealth' | 'fame' | 'romance'
 
@@ -58,6 +63,8 @@ type ConfigPanelProps = {
   fontFamily: string
   fontOptions: FontOption[]
   aiKeyword: string
+  petType: string
+  petWish: string
   personalInfo: PersonalInfo
   isAiLoading: boolean
   generationReasoning: string | null
@@ -68,6 +75,8 @@ type ConfigPanelProps = {
   onBorderPatternChange: (pattern: BorderPattern) => void
   onFontChange: (font: string) => void
   onAiKeywordChange: (keyword: string) => void
+  onPetTypeChange: (petType: string) => void
+  onPetWishChange: (petWish: string) => void
   onPersonalInfoChange: (info: Partial<PersonalInfo>) => void
   onAiInspire: () => void
 }
@@ -93,6 +102,7 @@ const borderPatternOptions: { id: BorderPattern; label: string }[] = [
 const TABS: { id: TabId; label: string }[] = [
   { id: 'fortune', label: '流年运势' },
   { id: 'keyword', label: '关键词' },
+  { id: 'pet', label: '萌宠趣味' },
   { id: 'custom', label: '自定义' },
 ]
 
@@ -108,6 +118,8 @@ function ConfigPanel({
   fontFamily,
   fontOptions,
   aiKeyword,
+  petType,
+  petWish,
   personalInfo,
   isAiLoading,
   generationReasoning,
@@ -118,6 +130,8 @@ function ConfigPanel({
   onBorderPatternChange,
   onFontChange,
   onAiKeywordChange,
+  onPetTypeChange,
+  onPetWishChange,
   onPersonalInfoChange,
   onAiInspire,
 }: ConfigPanelProps) {
@@ -360,6 +374,43 @@ function ConfigPanel({
           >
             {isAiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
             {isAiLoading ? 'AI 生成中...' : 'AI 根据关键词生成春联'}
+          </button>
+          <StyleSection />
+        </div>
+      )}
+
+      {activeTab === 'pet' && (
+        <div className="space-y-4">
+          <div className="grid gap-2">
+            <label className="text-sm font-semibold text-ink-ink">宠物类型</label>
+            <select
+              value={petType}
+              onChange={(e) => onPetTypeChange(e.target.value)}
+              className="rounded-xl border border-ink-red-500/20 bg-white px-3 py-2 text-sm text-ink-ink shadow-sm focus:border-ink-red-500 focus:outline-none"
+            >
+              <option value="猫">猫</option>
+              <option value="狗">狗</option>
+              <option value="乌龟">乌龟</option>
+              <option value="仓鼠">仓鼠</option>
+            </select>
+          </div>
+          <div className="grid gap-2">
+            <label className="text-sm font-semibold text-ink-ink">愿望</label>
+            <input
+              value={petWish}
+              onChange={(e) => onPetWishChange(e.target.value)}
+              className="rounded-xl border border-ink-red-500/20 bg-white px-3 py-2 text-sm text-ink-ink shadow-sm focus:border-ink-red-500 focus:outline-none"
+              placeholder="暴富、减肥、不掉毛..."
+            />
+          </div>
+          <button
+            type="button"
+            onClick={onAiInspire}
+            disabled={isAiLoading}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-ink-red-500/20 bg-ink-red-500/10 px-4 py-3 text-sm font-semibold text-ink-ink transition hover:bg-ink-red-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isAiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+            {isAiLoading ? 'AI 生成中...' : '生成宠物对联'}
           </button>
           <StyleSection />
         </div>

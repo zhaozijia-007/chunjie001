@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -9,6 +10,14 @@
   --color-ink-wall: #f6f1e7;
   --color-ink-ink: #3b1f1f;
   --font-calligraphy: "Ma Shan Zheng", "Noto Serif SC", "Songti SC", serif;
+}
+
+/* --- 对联色调变量 --- */
+:root {
+  --couplet-red-start: #D91818;
+  --couplet-red-end: #A60000;
+  --gold-gradient: linear-gradient(180deg, #FFF8D9 0%, #FFD700 40%, #D4AF37 100%);
+  --shadow-color: rgba(60, 10, 10, 0.2);
 }
 
 @layer base {
@@ -105,6 +114,49 @@
   animation: horse-float 3s ease-in-out infinite;
 }
 
+/* --- 对联红纸容器 --- */
+.couplet-bg {
+  background: linear-gradient(160deg, var(--couplet-red-start) 0%, var(--couplet-red-end) 100%),
+    var(--paper-pattern, none);
+  background-size: 100% 100%, var(--paper-pattern-size, auto);
+  box-shadow:
+    0 10px 20px -5px var(--shadow-color),
+    0 2px 4px rgba(0, 0, 0, 0.1),
+    inset 0 0 30px rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  padding: 28px 16px;
+  position: relative;
+  overflow: hidden;
+}
+.couplet-bg::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
+  opacity: 0.3;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+}
+
+/* --- 烫金文字 --- */
+.couplet-text {
+  font-weight: bold;
+  background: var(--gold-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 1px 1px rgba(108, 20, 20, 0.6));
+  letter-spacing: 4px;
+  line-height: 1.4;
+}
+
+/* --- 预览区墙面 --- */
+.preview-container {
+  background-color: #F7F5F0;
+  background-image: radial-gradient(circle at center, #fff 0%, #F7F5F0 70%);
+}
+
 .paper-texture {
   background-image:
     var(--paper-pattern, none),
@@ -149,4 +201,22 @@
   letter-spacing: 0.25em;
   word-spacing: 0.5em;
   line-height: 1.8;
+}
+
+/* 萌宠趣味 - 涂鸦风 */
+.style-pet .style-pet-text {
+  font-family: 'ZCOOL KuaiLe', cursive;
+  color: #2b2b2b;
+  background: none;
+  -webkit-text-fill-color: #2b2b2b;
+  transform: rotate(-1deg);
+  letter-spacing: 2px;
+}
+.style-pet .english-tag {
+  font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
+  font-size: 0.4em;
+  color: #d63031;
+  margin-top: 4px;
+  font-weight: bold;
+  text-transform: uppercase;
 }
