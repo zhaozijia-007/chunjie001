@@ -27,14 +27,72 @@
   }
 }
 
-/* 春节 festive 背景 - 灯笼、祥云、梅花 */
+/* 春节 festive 背景 - 动态喜庆 + 马年元素 */
 .festive-bg {
+  position: relative;
+  overflow: hidden;
+  background-color: #fdf6ed;
   background-image:
-    radial-gradient(ellipse 120% 80% at 10% 10%, rgba(196, 30, 58, 0.08), transparent 50%),
-    radial-gradient(ellipse 100% 60% at 90% 20%, rgba(255, 215, 0, 0.06), transparent 45%),
-    radial-gradient(circle at 20% 80%, rgba(196, 30, 58, 0.05), transparent 30%),
-    radial-gradient(circle at 80% 90%, rgba(255, 215, 0, 0.04), transparent 25%);
-  background-color: #faf5ef;
+    radial-gradient(ellipse 120% 80% at 10% 10%, rgba(196, 30, 58, 0.15), transparent 50%),
+    radial-gradient(ellipse 100% 60% at 90% 20%, rgba(255, 215, 0, 0.12), transparent 45%),
+    radial-gradient(circle at 20% 80%, rgba(196, 30, 58, 0.1), transparent 30%),
+    radial-gradient(circle at 80% 90%, rgba(255, 215, 0, 0.09), transparent 25%),
+    radial-gradient(circle at 50% 50%, rgba(255, 215, 0, 0.06), transparent 60%);
+}
+.festive-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(255, 215, 0, 0.05) 0%,
+    transparent 50%
+  );
+  animation: shimmer-pulse 6s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes shimmer-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* 背景小马 - 马年装饰 */
+.festive-horse {
+  position: absolute;
+  opacity: 0.22;
+  pointer-events: none;
+  animation: horse-drift 12s ease-in-out infinite;
+  z-index: 0;
+}
+.festive-horse:nth-child(1) { left: 5%; top: 15%; width: 48px; height: 48px; animation-delay: 0s; }
+.festive-horse:nth-child(2) { left: 88%; top: 25%; width: 40px; height: 40px; animation-delay: -3s; }
+.festive-horse:nth-child(3) { left: 12%; top: 70%; width: 36px; height: 36px; animation-delay: -6s; }
+.festive-horse:nth-child(4) { left: 85%; top: 75%; width: 44px; height: 44px; animation-delay: -9s; }
+.festive-horse:nth-child(5) { left: 50%; top: 5%; width: 32px; height: 32px; animation-delay: -2s; opacity: 0.18; }
+.festive-horse:nth-child(6) { left: 25%; top: 45%; width: 28px; height: 28px; animation-delay: -5s; opacity: 0.16; }
+.festive-horse:nth-child(7) { left: 75%; top: 55%; width: 30px; height: 30px; animation-delay: -8s; opacity: 0.18; }
+
+@keyframes horse-drift {
+  0%, 100% { transform: translate(0, 0) rotate(-2deg); }
+  25% { transform: translate(4px, -6px) rotate(1deg); }
+  50% { transform: translate(-3px, 4px) rotate(2deg); }
+  75% { transform: translate(5px, 2px) rotate(-1deg); }
+}
+
+/* 金粉/祥云浮动 - 喜庆粒子感 */
+.festive-particle {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.5), transparent);
+  pointer-events: none;
+  animation: particle-float 6s ease-in-out infinite;
+  z-index: 0;
+}
+.festive-particle:nth-child(odd) { background: radial-gradient(circle, rgba(196, 30, 58, 0.25), transparent); }
+
+@keyframes particle-float {
+  0%, 100% { opacity: 0.5; transform: translateY(0) scale(1); }
+  50% { opacity: 0.95; transform: translateY(-12px) scale(1.15); }
 }
 
 /* 小马动态 - Year of Horse 2026 */

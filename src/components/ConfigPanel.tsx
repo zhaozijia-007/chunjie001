@@ -60,6 +60,7 @@ type ConfigPanelProps = {
   aiKeyword: string
   personalInfo: PersonalInfo
   isAiLoading: boolean
+  generationReasoning: string | null
   onSkuChange: (id: SkuOption['id']) => void
   onContentChange: (content: CoupletContent) => void
   onPaperStyleChange: (style: PaperStyle) => void
@@ -109,6 +110,7 @@ function ConfigPanel({
   aiKeyword,
   personalInfo,
   isAiLoading,
+  generationReasoning,
   onSkuChange,
   onContentChange,
   onPaperStyleChange,
@@ -235,6 +237,12 @@ function ConfigPanel({
             {isAiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
             {isAiLoading ? 'AI 生成中...' : '根据八字流年生成春联'}
           </button>
+          {generationReasoning && (
+            <div className="rounded-xl border border-ink-red-500/15 bg-ink-red-500/5 p-3">
+              <p className="mb-1.5 text-xs font-semibold text-ink-ink/80">生成依据与思路</p>
+              <p className="text-xs leading-relaxed text-ink-ink/70">{generationReasoning}</p>
+            </div>
+          )}
         </div>
       )}
 

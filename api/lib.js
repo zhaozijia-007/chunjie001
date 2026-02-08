@@ -1,5 +1,5 @@
 export const DASHSCOPE_BASE = 'https://dashscope.aliyuncs.com/compatible-mode/v1'
-export const BAZI_AGENT_ID = 'fc18781954cc4f6b82a4533ac88a10c1'
+export const BAZI_AGENT_ID = process.env.BAZI_APP_ID || 'fc18781954cc4f6b82a4533ac88a10c1'
 export const WISH_LABELS = { career: '事业', wealth: '财运', fame: '名声', romance: '桃花' }
 export const HORSE_2026 = {
   year: '丙午',
@@ -36,7 +36,7 @@ export async function fetchBaziFromAgent(birth, birthPlace) {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${key}`,
       },
-      body: JSON.stringify({ input: { prompt }, parameters: {} }),
+      body: JSON.stringify({ input: { prompt }, parameters: {}, debug: {} }),
     })
     const data = await r.json()
     if (data.code && data.code !== 200) return null

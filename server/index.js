@@ -13,7 +13,7 @@ app.use(express.json())
 
 const DASHSCOPE_API_KEY = process.env.DASHSCOPE_API_KEY
 const DASHSCOPE_BASE = 'https://dashscope.aliyuncs.com/compatible-mode/v1'
-const BAZI_AGENT_ID = 'fc18781954cc4f6b82a4533ac88a10c1'
+const BAZI_AGENT_ID = process.env.BAZI_APP_ID || 'fc18781954cc4f6b82a4533ac88a10c1'
 
 const WISH_LABELS = { career: '事业', wealth: '财运', fame: '名声', romance: '桃花' }
 const HORSE_2026 = {
@@ -53,6 +53,7 @@ async function fetchBaziFromAgent(birth, birthPlace) {
       body: JSON.stringify({
         input: { prompt },
         parameters: {},
+        debug: {},
       }),
     })
     const data = await r.json()
@@ -184,7 +185,13 @@ ${baziSection}
 - 以文字之力助其趋吉避凶、心想事成
 
 请严格按以下 JSON 格式回复，不要包含其他说明：
-{"upper":"上联内容","lower":"下联内容","banner":"横批内容","fu":"福或春等"}`
+{
+  "upper":"上联内容",
+  "lower":"下联内容",
+  "banner":"横批内容",
+  "fu":"福或春等",
+  "reasoning":"生成依据与思路：简要说明八字排盘要点、马年流年吉象、三合六合贵人如何对应，以及如何结合愿望融入春联（80字以内）"
+}`
 
   try {
     const resp = await fetch(`${DASHSCOPE_BASE}/chat/completions`, {
@@ -200,15 +207,23 @@ ${baziSection}
       }),
     })
 
-    const data = await resp.json()
-    if (data.error) {
-      return res.status(400).json({ error: data.error.message || 'API 调用失败' })
+    const data = await resp.json().catch(() => ({}))
+    const apiError =
+      data?.error?.message || data?.error?.code || data?.error || data?.message || data?.msg
+    if (apiError || !resp.ok) {
+      return res.status(resp.ok ? 400 : 500).json({
+        error: apiError || `API 请求失败 (${resp.status})`,
+        hint: !DASHSCOPE_API_KEY ? '请配置 DASHSCOPE_API_KEY 环境变量' : undefined,
+      })
     }
 
     const content = data.choices?.[0]?.message?.content || ''
     const jsonMatch = content.match(/\{[\s\S]*\}/)
     if (!jsonMatch) {
-      return res.status(500).json({ error: '无法解析 AI 返回内容', raw: content.slice(0, 200) })
+      return res.status(500).json({
+        error: 'AI 返回格式异常',
+        hint: content?.slice(0, 100) ? `返回内容: ${content.slice(0, 100)}...` : undefined,
+      })
     }
 
     const parsed = JSON.parse(jsonMatch[0])
@@ -217,11 +232,18 @@ ${baziSection}
       lower: String(parsed.lower || '').slice(0, 14),
       banner: String(parsed.banner || '').slice(0, 8),
       fu: String(parsed.fu || '福').slice(0, 2) || '福',
+      reasoning: parsed.reasoning ? String(parsed.reasoning).slice(0, 300) : null,
     }
     return res.json(result)
   } catch (err) {
     console.error(err)
-    return res.status(500).json({ error: err.message || '服务器错误' })
+    const msg = err.message || '服务器错误'
+    const hint =
+      err.cause?.message ||
+      (String(msg).includes('fetch') || err.code === 'ECONNREFUSED'
+        ? '本地请运行 npm run dev:all 启动 API'
+        : undefined)
+    return res.status(500).json({ error: msg, hint })
   }
 })
 
