@@ -1,8 +1,8 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import html2canvas from 'html2canvas-pro'
 import ConfigPanel, {
-  type AiMode,
   type BorderPattern,
+  type TabId,
   type CoupletContent,
   type InkColor,
   type PaperStyle,
@@ -61,7 +61,7 @@ function App() {
   const [fontFamily, setFontFamily] = useState<string>(
     '"Ma Shan Zheng", "Noto Serif SC", "Songti SC", serif',
   )
-  const [aiMode, setAiMode] = useState<AiMode>('keyword')
+  const [activeTab, setActiveTab] = useState<TabId>('keyword')
   const [aiKeyword, setAiKeyword] = useState('')
   const [personalInfo, setPersonalInfo] = useState<PersonalInfo>({
     year: '',
@@ -84,9 +84,9 @@ function App() {
     if (isAiLoading) return
     setIsAiLoading(true)
     try {
-      const url = aiMode === 'personal' ? '/api/generate-personalized-couplet' : '/api/generate-couplet'
+      const url = activeTab === 'fortune' ? '/api/generate-personalized-couplet' : '/api/generate-couplet'
       const body =
-        aiMode === 'personal'
+        activeTab === 'fortune'
           ? {
               birth: {
                 year: personalInfo.year,
@@ -181,6 +181,8 @@ function App() {
       <div className="mx-auto flex min-h-screen max-w-7xl flex-col gap-4 px-4 py-6 sm:gap-6 sm:px-6 sm:py-8 lg:flex-row lg:gap-8">
         <div className="flex w-full flex-col gap-6 lg:w-[360px]">
           <ConfigPanel
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
             sku={sku}
             skuOptions={skuOptions}
             content={content}
@@ -189,7 +191,6 @@ function App() {
             borderPattern={borderPattern}
             fontFamily={fontFamily}
             fontOptions={fontOptions}
-            aiMode={aiMode}
             aiKeyword={aiKeyword}
             personalInfo={personalInfo}
             isAiLoading={isAiLoading}
@@ -199,7 +200,6 @@ function App() {
             onInkColorChange={setInkColor}
             onBorderPatternChange={setBorderPattern}
             onFontChange={setFontFamily}
-            onAiModeChange={setAiMode}
             onAiKeywordChange={setAiKeyword}
             onPersonalInfoChange={handlePersonalInfoChange}
             onAiInspire={handleAiInspire}
