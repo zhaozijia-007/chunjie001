@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import html2canvas from 'html2canvas-pro'
 import ConfigPanel, {
   type BorderPattern,
@@ -8,11 +8,44 @@ import ConfigPanel, {
   type PaperStyle,
   type PersonalInfo,
   type SkuOption,
+  type Script,
+  type FontId,
   WISH_OPTIONS,
 } from './components/ConfigPanel'
 import MusicPlayer from './components/MusicPlayer'
 import PreviewCanvas from './components/PreviewCanvas'
 import PrimaryButton from './components/PrimaryButton'
+
+declare global {
+  interface Window {
+    OpenCC?: {
+      Converter: (opts: { from: string; to: string }) => (text: string) => string
+    }
+  }
+}
+
+function getOpenCC() {
+  return typeof window !== 'undefined' ? window.OpenCC : undefined
+}
+
+function convertContent(
+  content: CoupletContent,
+  toTraditional: boolean
+): CoupletContent {
+  const opencc = getOpenCC()
+  if (!opencc) return content
+  const converter = opencc.Converter(
+    toTraditional ? { from: 'cn', to: 'tw' } : { from: 'tw', to: 'cn' }
+  )
+  const convert = (t: string) => (t ? converter(t) : t)
+  return {
+    ...content,
+    upper: convert(content.upper),
+    lower: convert(content.lower),
+    banner: convert(content.banner),
+    fu: convert(content.fu),
+  }
+}
 
 const defaultContent: CoupletContent = {
   upper: '龙腾虎跃春光好',
@@ -92,9 +125,8 @@ function App() {
   const [inkColor, setInkColor] = useState<InkColor>('gold')
   const [borderPattern, setBorderPattern] = useState<BorderPattern>('xiangyun')
   const [content, setContent] = useState<CoupletContent>(defaultContent)
-  const [fontFamily, setFontFamily] = useState<string>(
-    '"Ma Shan Zheng", "Noto Serif SC", "Songti SC", serif',
-  )
+  const [script, setScript] = useState<Script>('sc')
+  const [fontId, setFontId] = useState<FontId>('xingkai')
   const [activeTab, setActiveTab] = useState<TabId>('fortune')
   const [aiKeyword, setAiKeyword] = useState('')
   const [petType, setPetType] = useState('猫')
@@ -115,6 +147,12 @@ function App() {
 
   const handlePersonalInfoChange = (info: Partial<PersonalInfo>) => {
     setPersonalInfo((prev) => ({ ...prev, ...info }))
+  }
+
+  const handleScriptChange = (newScript: Script) => {
+    if (newScript === script) return
+    setContent((prev) => convertContent(prev, newScript === 'tc'))
+    setScript(newScript)
   }
 
   const handleAiInspire = async () => {
@@ -140,10 +178,11 @@ function App() {
               },
               birthPlace: personalInfo.birthPlace,
               wish: personalInfo.wish.length ? personalInfo.wish : undefined,
+              script,
             }
           : activeTab === 'pet'
-            ? { petType, wish: petWish || '暴富' }
-            : { keywords: aiKeyword || '新春吉祥' }
+            ? { petType, wish: petWish || '暴富', script }
+            : { keywords: aiKeyword || '新春吉祥', script }
 
       const res = await fetch(url, {
         method: 'POST',
@@ -152,7 +191,7 @@ function App() {
       })
       const data = await res.json().catch(() => ({}))
       if (data.upper && data.lower && data.banner) {
-        setContent({
+        const raw = {
           upper: data.upper,
           lower: data.lower,
           banner: data.banner,
@@ -161,7 +200,8 @@ function App() {
           upperEn: data.upperEn,
           lowerEn: data.lowerEn,
           fuEn: data.fuEn,
-        })
+        }
+        setContent(script === 'tc' ? convertContent(raw, true) : raw)
         const reasoning =
           activeTab === 'fortune'
             ? data.reasoning ||
@@ -177,7 +217,7 @@ function App() {
         activeTab === 'pet'
           ? getMockPetCouplet(petType)
           : mockCouplets[Math.floor(Math.random() * mockCouplets.length)]
-      setContent(next)
+      setContent(script === 'tc' ? convertContent(next, true) : next)
       if (activeTab === 'fortune') {
         const { year, month, day, hour, gender, birthPlace, wish } = personalInfo
         const wishLabels = wish.map((w) => WISH_OPTIONS.find((o) => o.id === w)?.label ?? w)
@@ -247,15 +287,6 @@ function App() {
     }
   }, [])
 
-  const fontOptions = useMemo(
-    () => [
-      { label: '马善政 (Ma Shan Zheng)', value: '"Ma Shan Zheng", "Noto Serif SC", serif' },
-      { label: '宋体衬线 (Noto Serif SC)', value: '"Noto Serif SC", "Songti SC", serif' },
-      { label: '系统书卷 (Serif)', value: 'serif' },
-    ],
-    [],
-  )
-
   const HorseSilhouette = () => (
     <svg viewBox="0 0 48 48" fill="none" className="h-full w-full" aria-hidden>
       <path
@@ -302,8 +333,6 @@ function App() {
             paperStyle={paperStyle}
             inkColor={inkColor}
             borderPattern={borderPattern}
-            fontFamily={fontFamily}
-            fontOptions={fontOptions}
             aiKeyword={aiKeyword}
             personalInfo={personalInfo}
             isAiLoading={isAiLoading}
@@ -313,7 +342,10 @@ function App() {
             onPaperStyleChange={setPaperStyle}
             onInkColorChange={setInkColor}
             onBorderPatternChange={setBorderPattern}
-            onFontChange={setFontFamily}
+            script={script}
+            fontId={fontId}
+            onScriptChange={handleScriptChange}
+            onFontIdChange={setFontId}
             onAiKeywordChange={setAiKeyword}
             petType={petType}
             petWish={petWish}
@@ -322,22 +354,24 @@ function App() {
             onPersonalInfoChange={handlePersonalInfoChange}
             onAiInspire={handleAiInspire}
           />
+        </div>
+        <div className="flex flex-1 flex-col gap-4">
+          <PreviewCanvas
+            ref={previewRef}
+            content={content}
+            paperStyle={paperStyle}
+            inkColor={inkColor}
+            borderPattern={borderPattern}
+            fontId={fontId}
+            isPetMode={activeTab === 'pet'}
+            petType={petType}
+          />
           <PrimaryButton
             label={isExporting ? '导出中...' : '生成打印包'}
             onClick={handleExportPrintPackage}
             disabled={isExporting}
           />
         </div>
-        <PreviewCanvas
-          ref={previewRef}
-          content={content}
-          paperStyle={paperStyle}
-          inkColor={inkColor}
-          borderPattern={borderPattern}
-          fontFamily={fontFamily}
-          isPetMode={activeTab === 'pet'}
-          petType={petType}
-        />
       </div>
     </div>
   )

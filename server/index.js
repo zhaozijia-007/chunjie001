@@ -73,21 +73,16 @@ async function fetchBaziFromAgent(birth, birthPlace) {
 }
 
 app.post('/api/generate-couplet', async (req, res) => {
-  const { keywords } = req.body || {}
-
-  if (!DASHSCOPE_API_KEY) {
-    return res.status(500).json({
-      error: 'API Key 未配置',
-      hint: '请在项目根目录创建 .env 文件，添加 DASHSCOPE_API_KEY=你的百炼API密钥',
-    })
-  }
-
-  const prompt = `你是一位精通中国传统文化的春联创作专家。请根据用户提供的关键词，创作一副新春对联。
+  const { keywords, script } = req.body || {}
+  const useTraditional = script === 'tc'
+  const scriptNote = useTraditional ? '【重要】必須使用繁體中文（Traditional Chinese）輸出，上聯、下聯、橫批、福字全部用繁體。\n\n' : ''
+  const prompt = `${scriptNote}你是一位精通中国传统文化的春联创作专家。请根据用户提供的关键词，创作一副新春对联。
 
 要求：
 - 上联、下联各 7 个汉字
 - 横批 4 个汉字
 - 福字或中心斗方为 1 个汉字（可为福、春、喜、吉等）
+${useTraditional ? '- 全部使用繁體中文書寫' : ''}
 
 请严格按以下 JSON 格式回复，不要包含其他说明文字：
 {"upper":"上联内容","lower":"下联内容","banner":"横批内容","fu":"福或春等"}
@@ -143,7 +138,8 @@ app.post('/api/generate-couplet', async (req, res) => {
 })
 
 app.post('/api/generate-personalized-couplet', async (req, res) => {
-  const { birth, birthPlace, wish } = req.body || {}
+  const { birth, birthPlace, wish, script } = req.body || {}
+  const useTraditional = script === 'tc'
 
   if (!DASHSCOPE_API_KEY) {
     return res.status(500).json({
@@ -166,7 +162,8 @@ app.post('/api/generate-personalized-couplet', async (req, res) => {
     ? wish.map((w) => WISH_LABELS[w] || w).join('、')
     : (WISH_LABELS[wish] || wish || '吉祥如意')
 
-  const prompt = `你是精通中国传统命理与春联的专家。请根据以下信息，创作一副贴合 2026 丙午马年流年、三合六合及个人八字风水的定制春联。
+  const scriptNote = useTraditional ? '【重要】本條春聯必須全部使用繁體中文（Traditional Chinese）書寫，每個字都是繁體。\n\n' : ''
+  const prompt = `${scriptNote}你是精通中国传统命理与春联的专家。请根据以下信息，创作一副贴合 2026 丙午马年流年、三合六合及个人八字风水的定制春联。
 
 【2026 马年流年】
 - 流年：${HORSE_2026.liunian}，五行属${HORSE_2026.wuxing}
@@ -248,7 +245,8 @@ ${baziSection}
 })
 
 app.post('/api/generate-pet-couplet', async (req, res) => {
-  const { petType, wish } = req.body || {}
+  const { petType, wish, script } = req.body || {}
+  const useTraditional = script === 'tc'
 
   if (!DASHSCOPE_API_KEY) {
     return res.status(500).json({
@@ -261,7 +259,7 @@ app.post('/api/generate-pet-couplet', async (req, res) => {
   const wishStr = String(wish || '暴富').slice(0, 20)
 
   const prompt = `You are a creative copywriter for Gen Z. You specialize in writing funny, cute Chinese New Year couplets for pets.
-
+${useTraditional ? '**OUTPUT LANGUAGE: You MUST write ALL Chinese text (top, left, right, center) in Traditional Chinese (繁體中文). No simplified characters.**\n\n' : ''}
 **CRITICAL: The user's pet type is "${pet}". You MUST use this pet and ONLY this pet in your couplet.**
 - If pet is 狗: use 狗/汪/旺/犬 etc. Do NOT use 猫.
 - If pet is 猫: use 猫/喵 etc. Do NOT use 狗.

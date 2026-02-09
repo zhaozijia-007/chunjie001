@@ -19,13 +19,18 @@ export async function onRequestPost(context) {
   } catch {
     body = {}
   }
-  const keywords = body.keywords
-  const prompt = `你是一位精通中国传统文化的春联创作专家。请根据用户提供的关键词，创作一副新春对联。
+  const { keywords, script } = body
+  const useTraditional = script === 'tc'
+  const scriptNote = useTraditional ? '【重要】必須使用繁體中文（Traditional Chinese）輸出，上聯、下聯、橫批、福字全部用繁體。' : ''
+  const prompt = `${scriptNote}
+
+你是一位精通中国传统文化的春联创作专家。请根据用户提供的关键词，创作一副新春对联。
 
 要求：
 - 上联、下联各 7 个汉字
 - 横批 4 个汉字
 - 福字或中心斗方为 1 个汉字（可为福、春、喜、吉等）
+${useTraditional ? '- 全部使用繁體中文書寫' : ''}
 
 请严格按以下 JSON 格式回复，不要包含其他说明文字：
 {"upper":"上联内容","lower":"下联内容","banner":"横批内容","fu":"福或春等"}

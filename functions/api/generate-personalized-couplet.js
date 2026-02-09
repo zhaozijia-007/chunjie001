@@ -53,14 +53,20 @@ export async function onRequestPost(context) {
   } catch (e) {
     return jsonResponse({ error: '请求格式错误' }, 400);
   }
-  const { birth, wish } = body;
+  const { birth, wish, script } = body;
+  const useTraditional = script === 'tc';
 
   // --- 3. 核心提示词 (这里就是你要的那个专业版！) ---
 
   const birthText = getSimpleBirthDesc(birth);
   const wishText = Array.isArray(wish) ? wish.join('、') : (wish || '万事如意, 阖家幸福');
 
-  const prompt = `
+  const scriptInstruction = useTraditional
+    ? '\n\n【重要】輸出語言：必須使用**繁體中文（Traditional Chinese）**，上聯、下聯、橫批、斗方、reasoning 全部用繁體字，不可出現簡體。'
+    : '';
+
+  const prompt = `【輸出要求】${useTraditional ? '本條春聯必須全部使用繁體中文（Traditional Chinese）書寫，每個字都是繁體，不可用簡體。' : '使用簡體中文。'}
+
 # Role
 你是一位精通中国传统国学、命理学与对联格律的文学大师。
 请根据用户提供的生辰八字（可选）与愿望，创作一副符合 **2026 丙午马年（火马年）** 流年运势的定制春联。
@@ -83,7 +89,7 @@ export async function onRequestPost(context) {
    - 下联最后一个字必须是**平声**（一声或二声）。
 3. **对仗**: 词性要工整（天对地，雨对风，大陆对长空）。
 4. **内容**: 上下联必须融入"马"、"午"、"丙火"、"腾飞"等 2026 年流年意象。
-5. **斗方**: 给出一个单字（如：福、顺、满、吉），适合贴在门中间。
+5. **斗方**: 给出一个单字（如：福、顺、满、吉），适合贴在门中间。${scriptInstruction}
 
 # Output Format (严格 JSON)
 请仅返回一个纯 JSON 对象，**严禁**包含 Markdown 代码块标记（如 \`\`\`json），也不要多嘴解释，格式如下：

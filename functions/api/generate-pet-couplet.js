@@ -19,12 +19,13 @@ export async function onRequestPost(context) {
   } catch {
     body = {}
   }
-  const { petType, wish } = body
+  const { petType, wish, script } = body
   const pet = String(petType || '猫').slice(0, 10)
   const wishStr = String(wish || '暴富').slice(0, 20)
+  const useTraditional = script === 'tc'
 
   const prompt = `You are a creative copywriter for Gen Z. You specialize in writing funny, cute Chinese New Year couplets for pets.
-
+${useTraditional ? '**OUTPUT LANGUAGE: You MUST write ALL Chinese text (top, left, right, center) in Traditional Chinese (繁體中文). No simplified characters.**\n\n' : ''}
 **CRITICAL: The user's pet type is "${pet}". You MUST use this pet and ONLY this pet in your couplet.**
 - If pet is 狗: use 狗/汪/旺/犬 etc. Do NOT use 猫.
 - If pet is 猫: use 猫/喵 etc. Do NOT use 狗.

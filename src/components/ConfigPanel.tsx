@@ -27,6 +27,12 @@ export type AiMode = 'keyword' | 'personal'
 
 export type TabId = 'fortune' | 'keyword' | 'pet' | 'custom'
 
+/** 简繁：sc 简体 / tc 繁体 */
+export type Script = 'sc' | 'tc'
+
+/** 字体风格：霞鹜文楷 / 庄重宋体 / 古朴隶书 / 传统楷体 / 狂野草书 */
+export type FontId = 'xingkai' | 'songti' | 'lishu' | 'kaiti' | 'caoshu'
+
 export type WishId = 'career' | 'wealth' | 'fame' | 'romance'
 
 export type PersonalInfo = {
@@ -46,11 +52,6 @@ export const WISH_OPTIONS = [
   { id: 'romance', label: '桃花' },
 ] as const
 
-type FontOption = {
-  label: string
-  value: string
-}
-
 type ConfigPanelProps = {
   activeTab: TabId
   onTabChange: (tab: TabId) => void
@@ -60,8 +61,8 @@ type ConfigPanelProps = {
   paperStyle: PaperStyle
   inkColor: InkColor
   borderPattern: BorderPattern
-  fontFamily: string
-  fontOptions: FontOption[]
+  script: Script
+  fontId: FontId
   aiKeyword: string
   petType: string
   petWish: string
@@ -73,7 +74,8 @@ type ConfigPanelProps = {
   onPaperStyleChange: (style: PaperStyle) => void
   onInkColorChange: (color: InkColor) => void
   onBorderPatternChange: (pattern: BorderPattern) => void
-  onFontChange: (font: string) => void
+  onScriptChange: (script: Script) => void
+  onFontIdChange: (fontId: FontId) => void
   onAiKeywordChange: (keyword: string) => void
   onPetTypeChange: (petType: string) => void
   onPetWishChange: (petWish: string) => void
@@ -106,6 +108,23 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'custom', label: '自定义' },
 ]
 
+/** 字体风格下拉值 → CSS font-family（Web 字体 + 系统兜底，支持简繁） */
+export const FONT_MAP: Record<FontId, string> = {
+  xingkai: "'LXGW WenKai Screen', 'KaiTi', 'STKaiti', cursive",
+  songti: "'Noto Serif SC', 'Noto Serif TC', 'Songti SC', 'SimSun', serif",
+  lishu: "'LiSu', 'STLiti', cursive",
+  kaiti: "'KaiTi', 'STKaiti', '楷体', cursive",
+  caoshu: "'Liu Jian Mao Cao', 'Long Cang', cursive",
+}
+
+const FONT_STYLE_OPTIONS: { id: FontId; label: string }[] = [
+  { id: 'xingkai', label: '霞鹜文楷 (推荐)' },
+  { id: 'caoshu', label: '狂野草书' },
+  { id: 'songti', label: '庄重宋体' },
+  { id: 'lishu', label: '古朴隶书 (系统)' },
+  { id: 'kaiti', label: '传统楷体 (系统)' },
+]
+
 function ConfigPanel({
   activeTab,
   onTabChange,
@@ -115,8 +134,8 @@ function ConfigPanel({
   paperStyle,
   inkColor,
   borderPattern,
-  fontFamily,
-  fontOptions,
+  script,
+  fontId,
   aiKeyword,
   petType,
   petWish,
@@ -128,7 +147,8 @@ function ConfigPanel({
   onPaperStyleChange,
   onInkColorChange,
   onBorderPatternChange,
-  onFontChange,
+  onScriptChange,
+  onFontIdChange,
   onAiKeywordChange,
   onPetTypeChange,
   onPetWishChange,
@@ -214,16 +234,35 @@ function ConfigPanel({
           </div>
         </div>
         <div>
-          <p className="mb-1.5 text-xs text-ink-ink/70">字体</p>
+          <p className="mb-1.5 text-xs text-ink-ink/70">字体风格</p>
           <select
-            value={fontFamily}
-            onChange={(e) => onFontChange(e.target.value)}
+            value={fontId}
+            onChange={(e) => onFontIdChange(e.target.value as FontId)}
             className="w-full rounded-lg border border-ink-red-500/20 bg-white px-3 py-2 text-sm focus:border-ink-red-500 focus:outline-none"
           >
-            {fontOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            {FONT_STYLE_OPTIONS.map((opt) => (
+              <option key={opt.id} value={opt.id}>{opt.label}</option>
             ))}
           </select>
+        </div>
+        <div>
+          <p className="mb-1.5 text-xs text-ink-ink/70">繁体模式</p>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={script === 'tc'}
+            onClick={() => onScriptChange(script === 'tc' ? 'sc' : 'tc')}
+            className={`relative inline-flex h-7 w-12 flex-shrink-0 rounded-full border-2 border-transparent transition-colors focus:outline-none ${
+              script === 'tc' ? 'bg-ink-red-600' : 'bg-ink-ink/20'
+            }`}
+          >
+            <span
+              className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition ${
+                script === 'tc' ? 'translate-x-5' : 'translate-x-1'
+              }`}
+            />
+          </button>
+          <span className="ml-2 text-sm text-ink-ink/80">{script === 'tc' ? '繁体' : '简体'}</span>
         </div>
       </div>
     </div>

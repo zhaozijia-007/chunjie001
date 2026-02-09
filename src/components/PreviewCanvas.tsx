@@ -1,13 +1,14 @@
 import { forwardRef } from 'react'
 import type { CSSProperties } from 'react'
-import type { BorderPattern, CoupletContent, InkColor, PaperStyle } from './ConfigPanel'
+import type { BorderPattern, CoupletContent, FontId, InkColor, PaperStyle } from './ConfigPanel'
+import { FONT_MAP } from './ConfigPanel'
 
 type PreviewCanvasProps = {
   content: CoupletContent
   paperStyle: PaperStyle
   inkColor: InkColor
   borderPattern: BorderPattern
-  fontFamily: string
+  fontId?: FontId
   isPetMode?: boolean
   petType?: string
 }
@@ -111,7 +112,7 @@ const PetIcon = ({ petType, className }: { petType: string; className?: string }
 }
 
 const PreviewCanvas = forwardRef<HTMLElement, PreviewCanvasProps>(function PreviewCanvas(
-  { content, paperStyle, inkColor, borderPattern, fontFamily, isPetMode, petType },
+  { content, paperStyle, inkColor, borderPattern, fontId = 'xingkai', isPetMode, petType },
   ref
 ) {
   const paperStyleValue = paperStyleMap[paperStyle]
@@ -137,6 +138,11 @@ const PreviewCanvas = forwardRef<HTMLElement, PreviewCanvasProps>(function Previ
   const textStyle = inkColor === 'black' && !isPetMode ? { color: textColor } : {}
   const petTextClass = isPetMode ? 'style-pet-text' : ''
   const wrapperClass = isPetMode ? 'style-pet' : ''
+  const fontFamily = FONT_MAP[fontId]
+  const paperStyleWithFont: PaperStyleValue & { fontFamily?: string } = {
+    ...paperStyleValue,
+    fontFamily: isPetMode ? undefined : fontFamily,
+  }
 
   const TextWithEn = ({
     text,
@@ -160,7 +166,7 @@ const PreviewCanvas = forwardRef<HTMLElement, PreviewCanvasProps>(function Previ
         <div className="relative grid w-full max-w-4xl grid-cols-[1fr_auto_1fr] gap-6 px-2 py-6 sm:gap-8 sm:px-4 sm:py-10 lg:gap-12 lg:px-6 lg:py-12">
           <div className="col-span-3 flex justify-center">
             <div
-              style={{ ...paperStyleValue, fontFamily }}
+              style={paperStyleWithFont}
               className={`couplet-bg rounded-2xl px-10 py-3 text-xl font-semibold tracking-[0.4em] sm:px-12 sm:py-4 sm:text-2xl sm:tracking-[0.5em] lg:px-16 lg:py-5 lg:text-3xl lg:tracking-[0.6em] ${borderClass}`}
             >
               <TextWithEn
@@ -174,7 +180,7 @@ const PreviewCanvas = forwardRef<HTMLElement, PreviewCanvasProps>(function Previ
 
           <div className="flex justify-end">
             <div
-              style={{ ...paperStyleValue, fontFamily }}
+              style={paperStyleWithFont}
               className={`couplet-bg flex min-h-[280px] w-[100px] items-center justify-center rounded-2xl px-4 py-8 text-2xl sm:min-h-[360px] sm:w-[120px] sm:px-5 sm:py-10 sm:text-3xl lg:min-h-[420px] lg:w-[140px] lg:px-6 lg:py-12 lg:text-4xl ${borderClass}`}
             >
               <TextWithEn
@@ -188,7 +194,7 @@ const PreviewCanvas = forwardRef<HTMLElement, PreviewCanvasProps>(function Previ
 
           <div className="flex items-center justify-center">
             <div
-              style={{ ...paperStyleValue, fontFamily }}
+              style={paperStyleWithFont}
               className={`couplet-bg flex h-24 w-24 rotate-45 items-center justify-center rounded-3xl text-3xl sm:h-32 sm:w-32 sm:text-4xl lg:h-36 lg:w-36 lg:text-5xl ${borderClass}`}
             >
               {isPetMode ? (
@@ -214,7 +220,7 @@ const PreviewCanvas = forwardRef<HTMLElement, PreviewCanvasProps>(function Previ
 
           <div className="flex justify-start">
             <div
-              style={{ ...paperStyleValue, fontFamily }}
+              style={paperStyleWithFont}
               className={`couplet-bg flex min-h-[280px] w-[100px] items-center justify-center rounded-2xl px-4 py-8 text-2xl sm:min-h-[360px] sm:w-[120px] sm:px-5 sm:py-10 sm:text-3xl lg:min-h-[420px] lg:w-[140px] lg:px-6 lg:py-12 lg:text-4xl ${borderClass}`}
             >
               <TextWithEn

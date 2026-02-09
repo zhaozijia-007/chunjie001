@@ -203,6 +203,18 @@
   line-height: 1.8;
 }
 
+/* 字体选择 - 简繁通吃，Web 字体 + 系统兜底 */
+.font-xingkai,
+.font-xingkai * { font-family: 'LXGW WenKai Screen', 'KaiTi', 'STKaiti', cursive !important; }
+.font-songti,
+.font-songti * { font-family: 'Noto Serif SC', 'Noto Serif TC', 'Songti SC', 'SimSun', serif !important; }
+.font-lishu,
+.font-lishu * { font-family: 'LiSu', 'STLiti', 'Zhi Mang Xing', cursive !important; }
+.font-kaiti,
+.font-kaiti * { font-family: 'KaiTi', 'STKaiti', '楷体', cursive !important; }
+.font-caoshu,
+.font-caoshu * { font-family: 'Liu Jian Mao Cao', 'Long Cang', cursive !important; }
+
 /* 萌宠趣味 - 涂鸦风 */
 .style-pet .style-pet-text {
   font-family: 'ZCOOL KuaiLe', cursive;
