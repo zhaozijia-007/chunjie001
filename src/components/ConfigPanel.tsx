@@ -30,8 +30,8 @@ export type TabId = 'fortune' | 'keyword' | 'pet' | 'custom'
 /** 简繁：sc 简体 / tc 繁体 */
 export type Script = 'sc' | 'tc'
 
-/** 字体风格：霞鹜文楷 / 庄重宋体 / 古朴隶书 / 传统楷体 / 狂野草书 */
-export type FontId = 'xingkai' | 'songti' | 'lishu' | 'kaiti' | 'caoshu'
+/** 字体风格：颜体 / 行楷 / 草书 / 隶书 / 宋体 */
+export type FontId = 'yanti' | 'xingkai' | 'caoshu' | 'lishu' | 'songti'
 
 export type WishId = 'career' | 'wealth' | 'fame' | 'romance'
 
@@ -110,19 +110,19 @@ const TABS: { id: TabId; label: string }[] = [
 
 /** 字体风格下拉值 → CSS font-family（Web 字体 + 系统兜底，支持简繁） */
 export const FONT_MAP: Record<FontId, string> = {
-  xingkai: "'LXGW WenKai Screen', 'KaiTi', 'STKaiti', cursive",
-  songti: "'Noto Serif SC', 'Noto Serif TC', 'Songti SC', 'SimSun', serif",
-  lishu: "'LiSu', 'STLiti', cursive",
-  kaiti: "'KaiTi', 'STKaiti', '楷体', cursive",
-  caoshu: "'Liu Jian Mao Cao', 'Long Cang', cursive",
+  yanti: "'LXGW WenKai Screen', 'KaiTi', 'STKaiti', '楷体', cursive",
+  xingkai: "'Ma Shan Zheng', 'KaiTi', cursive",
+  caoshu: "'Liu Jian Mao Cao', cursive",
+  lishu: "'LiSu', 'STLiti', '隶书', cursive",
+  songti: "'Noto Serif SC', 'Noto Serif TC', 'Songti SC', serif",
 }
 
 const FONT_STYLE_OPTIONS: { id: FontId; label: string }[] = [
-  { id: 'xingkai', label: '霞鹜文楷 (推荐)' },
+  { id: 'yanti', label: '厚重颜体 (推荐)' },
+  { id: 'xingkai', label: '潇洒行楷' },
   { id: 'caoshu', label: '狂野草书' },
+  { id: 'lishu', label: '古朴隶书' },
   { id: 'songti', label: '庄重宋体' },
-  { id: 'lishu', label: '古朴隶书 (系统)' },
-  { id: 'kaiti', label: '传统楷体 (系统)' },
 ]
 
 function ConfigPanel({

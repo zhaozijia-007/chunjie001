@@ -126,7 +126,7 @@ function App() {
   const [borderPattern, setBorderPattern] = useState<BorderPattern>('xiangyun')
   const [content, setContent] = useState<CoupletContent>(defaultContent)
   const [script, setScript] = useState<Script>('sc')
-  const [fontId, setFontId] = useState<FontId>('xingkai')
+  const [fontId, setFontId] = useState<FontId>('yanti')
   const [activeTab, setActiveTab] = useState<TabId>('fortune')
   const [aiKeyword, setAiKeyword] = useState('')
   const [petType, setPetType] = useState('猫')

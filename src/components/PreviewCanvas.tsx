@@ -112,7 +112,7 @@ const PetIcon = ({ petType, className }: { petType: string; className?: string }
 }
 
 const PreviewCanvas = forwardRef<HTMLElement, PreviewCanvasProps>(function PreviewCanvas(
-  { content, paperStyle, inkColor, borderPattern, fontId = 'xingkai', isPetMode, petType },
+  { content, paperStyle, inkColor, borderPattern, fontId = 'yanti', isPetMode, petType },
   ref
 ) {
   const paperStyleValue = paperStyleMap[paperStyle]

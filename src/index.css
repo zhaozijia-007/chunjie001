@@ -203,17 +203,17 @@
   line-height: 1.8;
 }
 
-/* 字体选择 - 简繁通吃，Web 字体 + 系统兜底 */
+/* 字体选择 - 颜体/行楷/草书/隶书/宋体，Web 字体 + 系统兜底 */
+.font-yanti,
+.font-yanti * { font-family: 'LXGW WenKai Screen', 'KaiTi', 'STKaiti', '楷体', cursive !important; }
 .font-xingkai,
-.font-xingkai * { font-family: 'LXGW WenKai Screen', 'KaiTi', 'STKaiti', cursive !important; }
-.font-songti,
-.font-songti * { font-family: 'Noto Serif SC', 'Noto Serif TC', 'Songti SC', 'SimSun', serif !important; }
-.font-lishu,
-.font-lishu * { font-family: 'LiSu', 'STLiti', 'Zhi Mang Xing', cursive !important; }
-.font-kaiti,
-.font-kaiti * { font-family: 'KaiTi', 'STKaiti', '楷体', cursive !important; }
+.font-xingkai * { font-family: 'Ma Shan Zheng', 'KaiTi', cursive !important; }
 .font-caoshu,
-.font-caoshu * { font-family: 'Liu Jian Mao Cao', 'Long Cang', cursive !important; }
+.font-caoshu * { font-family: 'Liu Jian Mao Cao', cursive !important; }
+.font-lishu,
+.font-lishu * { font-family: 'LiSu', 'STLiti', '隶书', cursive !important; }
+.font-songti,
+.font-songti * { font-family: 'Noto Serif SC', 'Noto Serif TC', 'Songti SC', serif !important; }
 
 /* 萌宠趣味 - 涂鸦风 */
 .style-pet .style-pet-text {
