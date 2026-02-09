@@ -1,12 +1,40 @@
-import {
-  DASHSCOPE_BASE,
-  WISH_LABELS,
-  HORSE_2026,
-  buildBirthDesc,
-  fetchBaziFromAgent,
-  jsonResponse,
-  corsPreflight,
-} from '../_lib.js'
+/**
+ * 独立版流年春联 API（单文件、无 _lib 依赖）
+ * 与「关键词」接口一致：使用 compatible-mode/v1/chat/completions，确保同一 Key 可跑通
+ */
+
+// 与关键词接口相同的 Base，保证测试环境能通
+const DASHSCOPE_BASE = 'https://dashscope.aliyuncs.com/compatible-mode/v1'
+
+function jsonResponse(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  })
+}
+
+function corsPreflight() {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  })
+}
+
+function getSimpleBirthDesc(birth) {
+  if (!birth) return '未提供'
+  return `${birth.year}年${birth.month}月${birth.day}日出生`
+}
+
+const WISH_LABELS = { career: '事业', wealth: '财运', fame: '名声', romance: '桃花' }
 
 export async function onRequestOptions() {
   return corsPreflight()
@@ -14,30 +42,27 @@ export async function onRequestOptions() {
 
 export async function onRequestPost(context) {
   const { request, env } = context
-  const key = env.DASHSCOPE_API_KEY
-  if (!key) {
+  const apiKey = env.DASHSCOPE_API_KEY
+  if (!apiKey) {
     return jsonResponse(
-      { error: 'API Key 未配置', hint: '请在 Cloudflare 项目设置中添加 DASHSCOPE_API_KEY 环境变量' },
+      { error: 'API Key 未配置', hint: '请在 Cloudflare 后台检查变量名是否为 DASHSCOPE_API_KEY' },
       500
     )
   }
+
   let body = {}
   try {
     body = await request.json()
-  } catch {
-    body = {}
+  } catch (e) {
+    return jsonResponse({ error: '请求体 JSON 格式错误' }, 400)
   }
+
   const { birth, birthPlace, wish } = body
   if (!birth?.year || !birth?.month || !birth?.day) {
     return jsonResponse({ error: '请提供完整的出生年月日' }, 400)
   }
 
-  const birthDesc = buildBirthDesc(birth, birthPlace)
-  const baziResult = await fetchBaziFromAgent(birth, birthPlace, env)
-  const baziSection = baziResult
-    ? `【八字排盘（百炼 Agent）】\n${baziResult}`
-    : `【个人生辰信息】${birthDesc}`
-
+  const birthText = getSimpleBirthDesc(birth)
   const wishText =
     Array.isArray(wish) && wish.length
       ? wish.map((w) => WISH_LABELS[w] || w).join('、')
@@ -45,13 +70,7 @@ export async function onRequestPost(context) {
 
   const prompt = `你是精通中国传统命理与春联的专家。请根据以下信息，创作一副贴合 2026 丙午马年流年、三合六合及个人八字风水的定制春联。
 
-【2026 马年流年】
-- 流年：${HORSE_2026.liunian}，五行属${HORSE_2026.wuxing}
-- 三合贵人：${HORSE_2026.sanhe}
-- 六合贵人：${HORSE_2026.liuhe}
-
-${baziSection}
-
+【个人生辰】${birthText}${birthPlace ? '，出生地：' + birthPlace : ''}
 【2026 年愿望】${wishText}
 
 要求：
@@ -59,23 +78,16 @@ ${baziSection}
 - 横批 4 个汉字
 - 福字或斗方 1 字（福、春、喜、吉等）
 - 使用传统术语如贵人、文昌、桃花、旺运等意象
-- 以文字之力助其趋吉避凶、心想事成
 
 请严格按以下 JSON 格式回复，不要包含其他说明：
-{
-  "upper":"上联内容",
-  "lower":"下联内容",
-  "banner":"横批内容",
-  "fu":"福或春等",
-  "reasoning":"生成依据与思路：简要说明八字排盘要点、马年流年吉象、三合六合贵人如何对应，以及如何结合愿望融入春联（80字以内）"
-}`
+{"upper":"上联内容","lower":"下联内容","banner":"横批内容","fu":"福或春等","reasoning":"生成依据与思路（80字以内）"}`
 
   try {
     const resp = await fetch(`${DASHSCOPE_BASE}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${key}`,
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model: 'qwen-turbo',
@@ -83,6 +95,7 @@ ${baziSection}
         max_tokens: 512,
       }),
     })
+
     const data = await resp.json().catch(() => ({}))
     const apiError =
       data?.error?.message || data?.error?.code || data?.error || data?.message || data?.msg
@@ -90,11 +103,12 @@ ${baziSection}
       return jsonResponse(
         {
           error: apiError || `API 请求失败 (${resp.status})`,
-          hint: !key ? '请配置 DASHSCOPE_API_KEY 环境变量' : undefined,
+          hint: !apiKey ? '请配置 DASHSCOPE_API_KEY 环境变量' : undefined,
         },
         resp.ok ? 400 : 500
       )
     }
+
     const content = data.choices?.[0]?.message?.content || ''
     const jsonMatch = content.match(/\{[\s\S]*\}/)
     if (!jsonMatch) {
@@ -106,6 +120,7 @@ ${baziSection}
         500
       )
     }
+
     const parsed = JSON.parse(jsonMatch[0])
     const result = {
       upper: String(parsed.upper || '').slice(0, 14),
@@ -116,7 +131,6 @@ ${baziSection}
     }
     return jsonResponse(result)
   } catch (err) {
-    const msg = err.message || '服务器错误'
-    return jsonResponse({ error: msg }, 500)
+    return jsonResponse({ error: '服务器内部错误', message: err.message }, 500)
   }
 }
