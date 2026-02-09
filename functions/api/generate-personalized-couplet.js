@@ -1,10 +1,10 @@
 /**
- * 独立版流年春联 API（单文件、无 _lib 依赖）
- * 与「关键词」接口一致：使用 compatible-mode/v1/chat/completions，确保同一 Key 可跑通
+ * 2026 马年春联生成 API (完整独立版)
+ * 集成了专业提示词，修复了 500 报错，无需外部依赖
  */
 
-// 与关键词接口相同的 Base，保证测试环境能通
-const DASHSCOPE_BASE = 'https://dashscope.aliyuncs.com/compatible-mode/v1'
+// --- 1. 常量与工具 ---
+const DASHSCOPE_BASE = 'https://dashscope.aliyuncs.com/api/v1';
 
 function jsonResponse(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -15,10 +15,18 @@ function jsonResponse(data, status = 200) {
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
     },
-  })
+  });
 }
 
-function corsPreflight() {
+// 简单的日期格式化
+function getSimpleBirthDesc(birth) {
+  if (!birth || !birth.year) return '';
+  return `${birth.year}年${birth.month}月${birth.day}日${birth.hour || ''}时`;
+}
+
+// --- 2. Cloudflare Pages 核心逻辑 ---
+
+export async function onRequestOptions() {
   return new Response(null, {
     status: 204,
     headers: {
@@ -26,111 +34,114 @@ function corsPreflight() {
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
     },
-  })
-}
-
-function getSimpleBirthDesc(birth) {
-  if (!birth) return '未提供'
-  return `${birth.year}年${birth.month}月${birth.day}日出生`
-}
-
-const WISH_LABELS = { career: '事业', wealth: '财运', fame: '名声', romance: '桃花' }
-
-export async function onRequestOptions() {
-  return corsPreflight()
+  });
 }
 
 export async function onRequestPost(context) {
-  const { request, env } = context
-  const apiKey = env.DASHSCOPE_API_KEY
+  const { request, env } = context;
+
+  // [检查] 必须从 env 里获取 Key
+  const apiKey = env.DASHSCOPE_API_KEY;
   if (!apiKey) {
-    return jsonResponse(
-      { error: 'API Key 未配置', hint: '请在 Cloudflare 后台检查变量名是否为 DASHSCOPE_API_KEY' },
-      500
-    )
+    return jsonResponse({ error: '后台未配置 DASHSCOPE_API_KEY，请检查 Cloudflare 设置' }, 500);
   }
 
-  let body = {}
+  // [解析] 请求体
+  let body = {};
   try {
-    body = await request.json()
+    body = await request.json();
   } catch (e) {
-    return jsonResponse({ error: '请求体 JSON 格式错误' }, 400)
+    return jsonResponse({ error: '请求格式错误' }, 400);
   }
+  const { birth, wish } = body;
 
-  const { birth, birthPlace, wish } = body
-  if (!birth?.year || !birth?.month || !birth?.day) {
-    return jsonResponse({ error: '请提供完整的出生年月日' }, 400)
-  }
+  // --- 3. 核心提示词 (这里就是你要的那个专业版！) ---
 
-  const birthText = getSimpleBirthDesc(birth)
-  const wishText =
-    Array.isArray(wish) && wish.length
-      ? wish.map((w) => WISH_LABELS[w] || w).join('、')
-      : WISH_LABELS[wish] || wish || '吉祥如意'
+  const birthText = getSimpleBirthDesc(birth);
+  const wishText = Array.isArray(wish) ? wish.join('、') : (wish || '万事如意, 阖家幸福');
 
-  const prompt = `你是精通中国传统命理与春联的专家。请根据以下信息，创作一副贴合 2026 丙午马年流年、三合六合及个人八字风水的定制春联。
+  const prompt = `
+# Role
+你是一位精通中国传统国学、命理学与对联格律的文学大师。
+请根据用户提供的生辰八字（可选）与愿望，创作一副符合 **2026 丙午马年（火马年）** 流年运势的定制春联。
 
-【个人生辰】${birthText}${birthPlace ? '，出生地：' + birthPlace : ''}
-【2026 年愿望】${wishText}
+# Context (流年背景)
+- **年份**: 2026 年（农历丙午年）。
+- **生肖**: 马（火马）。
+- **五行**: 天干丙火，地支午火，纳音天河水。
+- **吉象**: 龙马精神、万马奔腾、蒸蒸日上、红红火火、马到成功。
 
-要求：
-- 上联、下联各 7 个汉字，融入马年三合六合、流年吉象及个人愿望
-- 横批 4 个汉字
-- 福字或斗方 1 字（福、春、喜、吉等）
-- 使用传统术语如贵人、文昌、桃花、旺运等意象
+# User Input (用户信息)
+- **用户生辰**: ${birthText || '用户未提供，请忽略此项'}
+- **核心愿望**: ${wishText}
+- **附加要求**: 必须喜庆、吉祥，避开生僻字。
 
-请严格按以下 JSON 格式回复，不要包含其他说明：
-{"upper":"上联内容","lower":"下联内容","banner":"横批内容","fu":"福或春等","reasoning":"生成依据与思路（80字以内）"}`
+# Constraints (格律严选)
+1. **字数**: 上联 7 字，下联 7 字，横批 4 字。
+2. **格律**: 必须严格遵守"**仄起平收**"：
+   - 上联最后一个字必须是**仄声**（三声或四声）。
+   - 下联最后一个字必须是**平声**（一声或二声）。
+3. **对仗**: 词性要工整（天对地，雨对风，大陆对长空）。
+4. **内容**: 上下联必须融入"马"、"午"、"丙火"、"腾飞"等 2026 年流年意象。
+5. **斗方**: 给出一个单字（如：福、顺、满、吉），适合贴在门中间。
 
+# Output Format (严格 JSON)
+请仅返回一个纯 JSON 对象，**严禁**包含 Markdown 代码块标记（如 \`\`\`json），也不要多嘴解释，格式如下：
+{
+  "upper": "上联内容",
+  "lower": "下联内容",
+  "banner": "横批",
+  "fu": "斗方",
+  "reasoning": "解析：说明如何结合了用户愿望与马年运势（50字内）"
+}`;
+
+  // --- 4. 调用阿里云 AI ---
   try {
-    const resp = await fetch(`${DASHSCOPE_BASE}/chat/completions`, {
+    const resp = await fetch(`${DASHSCOPE_BASE}/services/aigc/text-generation/generation`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
+        'Authorization': `Bearer ${apiKey}`,
+        'X-DashScope-WorkSpace': 'text-generation'
       },
       body: JSON.stringify({
-        model: 'qwen-turbo',
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 512,
+        model: 'qwen-turbo', // 使用通义千问模型
+        input: {
+          messages: [
+            { role: 'user', content: prompt }
+          ]
+        },
+        parameters: {
+          result_format: 'message',
+          temperature: 0.7 // 稍微有点创造力，但别太飞
+        }
       }),
-    })
+    });
 
-    const data = await resp.json().catch(() => ({}))
-    const apiError =
-      data?.error?.message || data?.error?.code || data?.error || data?.message || data?.msg
-    if (apiError || !resp.ok) {
-      return jsonResponse(
-        {
-          error: apiError || `API 请求失败 (${resp.status})`,
-          hint: !apiKey ? '请配置 DASHSCOPE_API_KEY 环境变量' : undefined,
-        },
-        resp.ok ? 400 : 500
-      )
+    if (!resp.ok) {
+      const errText = await resp.text();
+      return jsonResponse({ error: `AI 调用失败: ${resp.status}`, details: errText }, 500);
     }
 
-    const content = data.choices?.[0]?.message?.content || ''
-    const jsonMatch = content.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) {
-      return jsonResponse(
-        {
-          error: 'AI 返回格式异常',
-          hint: content?.slice(0, 100) ? `返回内容: ${content.slice(0, 100)}...` : undefined,
-        },
-        500
-      )
+    const data = await resp.json();
+    const content = data.output?.choices?.[0]?.message?.content || '';
+
+    // [清洗] 尝试提取纯 JSON (防止 AI 废话)
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    let result = {};
+    if (jsonMatch) {
+      try {
+        result = JSON.parse(jsonMatch[0]);
+      } catch (e) {
+        result = { error: 'AI 返回了坏掉的 JSON', raw: content };
+      }
+    } else {
+      result = { error: 'AI 没返回 JSON', raw: content };
     }
 
-    const parsed = JSON.parse(jsonMatch[0])
-    const result = {
-      upper: String(parsed.upper || '').slice(0, 14),
-      lower: String(parsed.lower || '').slice(0, 14),
-      banner: String(parsed.banner || '').slice(0, 8),
-      fu: String(parsed.fu || '福').slice(0, 2) || '福',
-      reasoning: parsed.reasoning ? String(parsed.reasoning).slice(0, 300) : null,
-    }
-    return jsonResponse(result)
+    return jsonResponse(result);
+
   } catch (err) {
-    return jsonResponse({ error: '服务器内部错误', message: err.message }, 500)
+    return jsonResponse({ error: 'Worker 内部错误', message: err.message }, 500);
   }
 }
